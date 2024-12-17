@@ -15,11 +15,9 @@ def get_relevant_subreddits(keywords, search_limit=100):
                          password=os.getenv("PASSWORD"),
                          user_agent="ToastyPostyBot/1.0 by u/One-Cap-3906")
 
-    # Dictionary to store subreddit scores
     subreddit_scores = defaultdict(int)
     subreddit_details = {}
 
-    # Search subreddits for each keyword
     for keyword in keywords:
         try:
             search_results = reddit.subreddits.search(
@@ -33,8 +31,9 @@ def get_relevant_subreddits(keywords, search_limit=100):
                     
                     print("Found subreddit: " + subreddit.display_name)
 
-                    content = f"{subreddit.display_name} {
-                        subreddit.public_description}".lower()
+                    content = (
+                        f"{subreddit.display_name} {subreddit.public_description}"
+                    ).lower()
                     subreddit_details[subreddit.display_name] = {
                         "description": subreddit.public_description
                     }
@@ -84,6 +83,7 @@ def post_to_reddit(subreddit, title, content):
 
     submission = subreddit.submit(title=title, selftext=content)
     print(f"Post submitted! URL: {submission.url}")
+    return submission.url
 
 
 # print(get_relevant_subreddits(['travel', 'rewards', 'bonuses'], search_limit=20, top_n=10))
