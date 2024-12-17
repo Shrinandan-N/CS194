@@ -9,7 +9,7 @@ def get_100_subreddits(keywords):
     for keyword in keywords:
         subreddits.extend(reddit.subreddit(keyword).hot(limit=100))
 
-    subreddits = [subreddit.subreddit.display_name for subreddit in subreddits]
+    subreddits = [subreddit.subreddit.title for subreddit in subreddits]
 
     return subreddits
 
