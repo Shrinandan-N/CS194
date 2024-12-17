@@ -3,9 +3,13 @@ import praw
 from dotenv import load_dotenv
 load_dotenv()
 import os
+from collections import defaultdict
 
+### CONSTANTS ###
+search_limit = 20
+top_n = 10
 
-def get_relevant_subreddits(keywords, search_limit=100, top_n=50):
+def get_relevant_subreddits(keywords, search_limit=20, top_n=50):
     """
     Fetch the top 'top_n' relevant subreddits based on keyword matches in their name and description.
 
@@ -33,8 +37,7 @@ def get_relevant_subreddits(keywords, search_limit=100, top_n=50):
                 keyword, limit=search_limit)
             for subreddit in search_results:
                 # Combine name and description for keyword matching
-                content = f"{subreddit.display_name} {
-                    subreddit.public_description}".lower()
+                content = f"{subreddit.display_name} {subreddit.public_description}".lower()
                 subreddit_details[subreddit.display_name] = {
                     "description": subreddit.public_description
                 }
@@ -85,4 +88,18 @@ def post_to_reddit(subreddit, title, content):
     submission = subreddit.submit(title=title, selftext=content)
     print(f"Post submitted! URL: {submission.url}")
 
-print("SUBREDDITS: ", get_100_subreddits(["food"]))
+
+# Example Usage
+keywords = [
+    "credit cards",
+    "rewards",
+    "cashback",
+    "travel cards",
+    "balance transfer",
+    "credit score",
+    "low interest",
+    "annual fee",
+    "secured cards",
+    "debt management"
+]
+print("SUBREDDITS: ", get_relevant_subreddits(keywords, search_limit, top_n))
