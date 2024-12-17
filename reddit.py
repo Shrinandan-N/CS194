@@ -1,9 +1,12 @@
 from webbrowser import get
 import praw
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 def get_100_subreddits(keywords):
-    reddit = praw.Reddit(client_id="0MFmtUnQVteI8igkmZIO4A",
-                         client_secret="dL5Ud4N_aH2lzTggcGhWDCZVn6_aAg",
+    reddit = praw.Reddit(client_id=os.getenv("CLIENT_ID"),
+                         client_secret=os.getenv("CLIENT_SECRET"),
                          user_agent="ToastyPostyBot/1.0 by u/One-Cap-3906")
     subreddits = []
     for keyword in keywords:
