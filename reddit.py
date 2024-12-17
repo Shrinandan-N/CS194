@@ -4,23 +4,70 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
-def get_100_subreddits(keywords):
+
+def get_relevant_subreddits(keywords, search_limit=100, top_n=50):
+    """
+    Fetch the top 'top_n' relevant subreddits based on keyword matches in their name and description.
+
+    Args:
+        keywords (list): A list of keywords to search for.
+        search_limit (int): Number of subreddit results to evaluate for each keyword search.
+        top_n (int): Number of top relevant subreddits to return.
+
+    Returns:
+        list: A list of tuples containing subreddit names and descriptions.
+    """
+    # Initialize Reddit API
     reddit = praw.Reddit(client_id=os.getenv("CLIENT_ID"),
                          client_secret=os.getenv("CLIENT_SECRET"),
                          user_agent="ToastyPostyBot/1.0 by u/One-Cap-3906")
-    subreddits = []
+
+    # Dictionary to store subreddit scores
+    subreddit_scores = defaultdict(int)
+    subreddit_details = {}
+
+    # Search subreddits for each keyword
     for keyword in keywords:
-        subreddits.extend(reddit.subreddit(keyword).hot(limit=100))
+        try:
+            search_results = reddit.subreddits.search(
+                keyword, limit=search_limit)
+            for subreddit in search_results:
+                # Combine name and description for keyword matching
+                content = f"{subreddit.display_name} {
+                    subreddit.public_description}".lower()
+                subreddit_details[subreddit.display_name] = {
+                    "description": subreddit.public_description
+                }
 
-    subreddits = [subreddit.subreddit.title for subreddit in subreddits]
+                # Count keyword occurrences
+                keyword_matches = sum(
+                    1 for k in keywords if k.lower() in content)
+                if keyword_matches > 0:
+                    subreddit_scores[subreddit.display_name] += keyword_matches
+        except Exception as e:
+            print(f"Error searching for '{keyword}': {e}")
 
-    return subreddits
+    # Sort subreddits by score in descending order
+    sorted_subreddits = sorted(
+        subreddit_scores.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    # Get top 'top_n' subreddits with details
+    top_subreddits = [
+        (name, subreddit_details[name]["description"])
+        for name, _ in sorted_subreddits[:top_n]
+    ]
+
+    return top_subreddits
+
 
 def post_to_reddit(subreddit, title, content):
-    client_id = "0MFmtUnQVteI8igkmZIO4A"
-    client_secret = "dL5Ud4N_aH2lzTggcGhWDCZVn6_aAg"
-    username = "One-Cap-3906"  
-    password = "toastyposty123"  
+    client_id = os.getenv("CLIENT_ID")
+    client_secret = os.getenv("CLIENT_SECRET")
+    username = os.getenv("USERNAME")  
+    password = os.getenv("PASSWORD")  
     user_agent = "ToastyPostyBot/1.0 by u/One-Cap-3906"
 
     reddit = praw.Reddit(
