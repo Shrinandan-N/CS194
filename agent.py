@@ -5,7 +5,7 @@ from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from reddit import get_relevant_subreddits, post_to_reddit
+from reddit import get_relevant_subreddits, post_to_reddit, fetch_comments_for_query
 
 load_dotenv()
 
@@ -37,8 +37,25 @@ def post_to_subreddit(subreddit: str, title: str, content: str) -> str:
         status = "failure"
     return {"status": status, "result": result}
 
+@tool
+def fetch_comments(subreddit: str, query: str, post_limit: int = 5, comment_limit: int = 5) -> list:
+    """
+    Fetch top posts and comments for a given query in a subreddit.
+    
+    Args:
+        subreddit (str): The subreddit to search.
+        query (str): The search query.
+        post_limit (int): Number of top posts to retrieve.
+        comment_limit (int): Number of comments per post.
 
-tools = [grab_subreddits, post_to_subreddit]
+    Returns:
+        list: A list of dictionaries containing post titles, URLs, and comments.
+    """
+    print(f"Fetching comments for query '{query}' in r/{subreddit}...")
+    results = fetch_comments_for_query(subreddit, query, post_limit, comment_limit)
+    return results
+
+tools = [grab_subreddits, post_to_subreddit, fetch_comments]
 llm_with_tools = llm.bind_tools(tools)
 
 
@@ -135,9 +152,14 @@ Extracted Keywords: ["travel", "credit cards", "rewards"].
 MAKE SURE TO PASS THE EXRTRACTED KEYWORDS AS AN ARRAY LIKE ["travel", "credit cards", "rewards", "points"] to the grab_subreddits() function.
 Grab Subreddits: Call grab_subreddits(["travel", "credit cards", "rewards", "points", "cashback", "international travel", "foreign transaction fees", "business travel", "personal trips", "frequent flyer"]).
 Based on the returned subreddits, choose the top 5 that you think are most relevant to the query based on their descriptions.
-Confirmation to Post:
-"I found these relevant subreddits: r/travel, r/creditcards, r/awardtravel. Would you like to post your question to one or more of these subreddits?"
-Before you post to the subreddit, brainstorm title and content for the post with the user.
+Confirmation the subreddit:
+"I found these relevant subreddits: r/travel, r/creditcards, r/awardtravel. Would you like to dive deeper into one or more of these subreddits?"
+Brainstorm title and content for the post with the user.
+
+Analyze Subreddit Content: Once the user selects a subreddit of interest, analyze the top posts and comments to gather insights relevant to the user’s query:
+Call the fetch_comments() tool to: search for the query within the subreddit, retrieve the top N posts (e.g., 5) and the top M comments (e.g., 5) per post, summarize the insights clearly for the user.
+Ask if the summary answered the user's question. If the user is happy with the summary, then they have their answer and no further steps are necessary. If not, then continuing to posting steps.
+
 Post to Subreddit: If the user agrees, post the query to the selected subreddit(s). 
 If the response from the function says like Post Submitted, then its a success! Let the user know.
 """
